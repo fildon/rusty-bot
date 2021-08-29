@@ -1,4 +1,5 @@
 use wasm_bindgen::prelude::*;
+// TODO remove console. Also from cargo toml
 use web_sys::console;
 
 mod bitboard;
