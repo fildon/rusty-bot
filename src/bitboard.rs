@@ -1,4 +1,4 @@
-enum LeafValue {
+pub enum LeafValue {
   Win,
   Loss,
   Draw,
@@ -20,9 +20,9 @@ pub struct GameState {
    * ```
    */
   bitboard: [u64; 2],
-  height: [u8; 7],
-  to_play: bool,
-  leaf_value: LeafValue,
+  pub height: [u8; 7],
+  pub to_play: bool,
+  pub leaf_value: LeafValue,
 }
 
 pub fn create_new_board() -> GameState {

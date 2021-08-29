@@ -1,11 +1,9 @@
 use wasm_bindgen::prelude::*;
-// TODO remove console. Also from cargo toml
-use web_sys::console;
 
+mod ai;
 mod bitboard;
 
 #[wasm_bindgen]
-pub fn hello() {
-    console::log_1(&"Hello from rusty-bot".into());
-    bitboard::create_new_board();
+pub fn pick_best_move(bitboard1: u64, bitboard2: u64) {
+    ai::pick_best_move(bitboard1, bitboard2);
 }
