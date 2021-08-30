@@ -20,7 +20,7 @@ pub struct GameState {
    * +---------------------+
    * ```
    */
-  bitboard: [u64; 2],
+  pub bitboard: [u64; 2],
   pub height: [u8; 7],
   pub to_play: bool,
   pub leaf_value: LeafValue,
@@ -126,10 +126,27 @@ pub fn get_legal_moves(height: [u8; 7]) -> Vec<usize> {
 
   for col in 0..=6 {
     // A move is legal iff its column is not topped out
-    if TOP[col] != 1 << height[col] {
+    if TOP[col] != height[col] {
       legal_moves.push(col);
     }
   }
 
   legal_moves
+}
+
+#[cfg(test)]
+mod tests {
+  use super::*;
+  #[test]
+  fn seven_legal_moves() {
+    assert_eq!(
+      get_legal_moves([0, 7, 14, 21, 28, 35, 42]),
+      [0, 1, 2, 3, 4, 5, 6]
+    )
+  }
+
+  #[test]
+  fn zero_legal_moves() {
+    assert_eq!(get_legal_moves([6, 13, 20, 27, 34, 41, 48]), [])
+  }
 }

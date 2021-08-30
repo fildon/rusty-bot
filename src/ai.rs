@@ -1,7 +1,27 @@
 use crate::bitboard;
 
-fn heuristic_evaluation(state: bitboard::GameState) -> f64 {
-  0.0 // TODO
+/**
+ * A map of the board with each cell displaying how many wins could pass through it
+ * 0s are for the top row which should never come up
+ */
+const WIN_MAP: [i32; 48] = [
+  3, 4, 5, 5, 4, 3, 0, 4, 6, 8, 8, 6, 4, 0, 5, 8, 11, 11, 8, 5, 0, 7, 10, 13, 13, 10, 7, 0, 5, 8,
+  11, 11, 8, 5, 0, 4, 6, 8, 8, 6, 4, 0, 3, 4, 5, 5, 4, 3,
+];
+fn heuristic_evaluation(p1: u64, p2: u64) -> i32 {
+  let mut evaluation = 0;
+
+  for location in 0..48 {
+    let value = WIN_MAP[location];
+    if (p1 >> location) & 1 != 0 {
+      evaluation += value
+    }
+    if (p2 >> location) & 1 != 0 {
+      evaluation -= value
+    }
+  }
+
+  return evaluation;
 }
 
 fn minimax(state: bitboard::GameState, depth: u8, min: f64, max: f64) -> f64 {
@@ -16,7 +36,7 @@ fn minimax(state: bitboard::GameState, depth: u8, min: f64, max: f64) -> f64 {
   }
 
   if depth < 1 {
-    return heuristic_evaluation(state);
+    return heuristic_evaluation(state.bitboard[0], state.bitboard[1]).into();
   }
 
   let mut v = if state.to_play {
@@ -61,7 +81,7 @@ pub fn pick_best_move(state: bitboard::GameState) -> usize {
   for current_move in legal_moves.iter() {
     let mut current_value = minimax(
       bitboard::play_move(&state, *current_move),
-      6,
+      9,
       f64::NEG_INFINITY,
       f64::INFINITY,
     );
@@ -76,4 +96,27 @@ pub fn pick_best_move(state: bitboard::GameState) -> usize {
   }
 
   return best_move;
+}
+
+#[cfg(test)]
+mod tests {
+  use super::*;
+  use crate::bitboard::create_game_state;
+  #[test]
+
+  fn opens_in_middle_column() {
+    let blank_board = create_game_state(0, 0);
+    let opening_move = pick_best_move(blank_board);
+    assert_eq!(opening_move, 3)
+  }
+
+  #[test]
+  fn test_heuristic_evaluation() {
+    assert_eq!(heuristic_evaluation(0, 0), 0);
+    assert_eq!(heuristic_evaluation(1, 0), 3);
+    assert_eq!(heuristic_evaluation(0, 1), -3);
+    assert_eq!(heuristic_evaluation(1, 1), 0);
+    assert_eq!(heuristic_evaluation(3, 0), 7);
+    assert_eq!(heuristic_evaluation(1 << 21, 0), 7);
+  }
 }
