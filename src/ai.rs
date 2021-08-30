@@ -1,10 +1,10 @@
 use crate::bitboard;
 
-fn heuristic_evaluation(state: &bitboard::GameState) -> f64 {
+fn heuristic_evaluation(state: bitboard::GameState) -> f64 {
   0.0 // TODO
 }
 
-fn minimax(state: &bitboard::GameState, depth: &u8, min: &f64, max: &f64) -> f64 {
+fn minimax(state: bitboard::GameState, depth: u8, min: f64, max: f64) -> f64 {
   if state.leaf_value == bitboard::LeafValue::Win {
     return f64::INFINITY;
   }
@@ -15,11 +15,42 @@ fn minimax(state: &bitboard::GameState, depth: &u8, min: &f64, max: &f64) -> f64
     return 0.0;
   }
 
-  if depth < &1 {
+  if depth < 1 {
     return heuristic_evaluation(state);
   }
 
-  0.0 // TODO
+  let mut v = if state.to_play {
+    min.clone()
+  } else {
+    max.clone()
+  };
+  let legal_moves = bitboard::get_legal_moves(state.height);
+  for legal_move in legal_moves {
+    let child = bitboard::play_move(&state, legal_move);
+    let vv = minimax(
+      child,
+      depth - 1,
+      if state.to_play { v } else { min },
+      if state.to_play { max } else { v },
+    );
+
+    if state.to_play {
+      if vv > v {
+        v = vv
+      }
+      if v >= max {
+        return max;
+      }
+    } else {
+      if vv < v {
+        v = vv
+      }
+      if v <= min {
+        return min;
+      }
+    }
+  }
+  return v;
 }
 
 pub fn pick_best_move(state: bitboard::GameState) -> usize {
@@ -29,10 +60,10 @@ pub fn pick_best_move(state: bitboard::GameState) -> usize {
   let mut best_move: usize = 0;
   for current_move in legal_moves.iter() {
     let mut current_value = minimax(
-      &bitboard::play_move(&state, *current_move),
-      &6,
-      &f64::NEG_INFINITY,
-      &f64::INFINITY,
+      bitboard::play_move(&state, *current_move),
+      6,
+      f64::NEG_INFINITY,
+      f64::INFINITY,
     );
     // invert for player 2
     if !state.to_play {
