@@ -1,8 +1,9 @@
+#[derive(PartialEq, Eq)]
 pub enum LeafValue {
   Win,
   Loss,
   Draw,
-  Unknown,
+  InProgress,
 }
 
 pub struct GameState {
@@ -25,25 +26,70 @@ pub struct GameState {
   pub leaf_value: LeafValue,
 }
 
-pub fn create_new_board() -> GameState {
+fn count_ones(binary: u64) -> u8 {
+  let mut count = 0;
+  let mut clone = binary.clone();
+  while clone > 0 {
+    count = count + 1;
+    clone = clone & (clone - 1); // delete lowest 1
+  }
+  count
+}
+
+fn get_height(combinedbitboard: u64) -> [u8; 7] {
+  let mut height = [0, 7, 14, 21, 28, 35, 42];
+
+  for col in 0..=6 {
+    let mut row = 0;
+    while row < 6 && 1 << height[col] & combinedbitboard != 0 {
+      height[col] += 1;
+      row += 1
+    }
+  }
+
+  height
+}
+
+fn get_leaf_value(bitboard1: u64, bitboard2: u64, height: [u8; 7]) -> LeafValue {
+  if is_win(&bitboard1) {
+    return LeafValue::Win;
+  }
+  if is_win(&bitboard2) {
+    return LeafValue::Loss;
+  }
+
+  if is_draw(&height) {
+    return LeafValue::Draw;
+  }
+  LeafValue::InProgress
+}
+
+/**
+ * Build a GameState from a pair of bitboards
+ *
+ * _WARNING_: Does not check that the provided bitboards or the resulting GameState is a legal position
+ */
+pub fn create_game_state(bitboard1: u64, bitboard2: u64) -> GameState {
+  let height = get_height(bitboard1 | bitboard2);
   GameState {
-    bitboard: [0, 0],
-    height: [0, 7, 14, 21, 28, 35, 42],
-    to_play: true,
-    leaf_value: LeafValue::Unknown,
+    bitboard: [bitboard1, bitboard2],
+    height,
+    to_play: count_ones(bitboard1 | bitboard2) % 2 == 0,
+    leaf_value: get_leaf_value(bitboard1, bitboard2, height),
   }
 }
 
+const TOP: [u8; 7] = [6, 13, 20, 27, 34, 41, 48];
 fn is_draw(height: &[u8; 7]) -> bool {
   // draw if height is topped out in every column
-  height == &[6, 13, 20, 27, 34, 41, 48]
+  height == &TOP
 }
 
 const DIRECTIONS: [u8; 4] = [1, 7, 6, 8];
 fn is_win(bitboard: &u64) -> bool {
   DIRECTIONS.iter().any(|&direction| {
     let bb = bitboard & (bitboard >> direction);
-    (bb & (bb >> (2 * direction))) != 0
+    (bb & (bb >> (direction << 1))) != 0
   })
 }
 
@@ -70,19 +116,20 @@ pub fn play_move(state: &GameState, column: usize) -> GameState {
     } else if is_draw(&new_height) {
       LeafValue::Draw
     } else {
-      LeafValue::Unknown
+      LeafValue::InProgress
     },
   }
 }
 
 pub fn get_legal_moves(height: [u8; 7]) -> Vec<usize> {
-  (0..=6)
-    .into_iter()
-    // TODO scope to improve this filter
-    .filter(|&col| {
-      ![6, 13, 20, 27, 34, 41, 48]
-        .iter()
-        .any(|&top| top == 1 << height[col])
-    })
-    .collect()
+  let mut legal_moves: Vec<usize> = Vec::new();
+
+  for col in 0..=6 {
+    // A move is legal iff its column is not topped out
+    if TOP[col] != 1 << height[col] {
+      legal_moves.push(col);
+    }
+  }
+
+  legal_moves
 }

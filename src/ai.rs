@@ -5,12 +5,15 @@ fn heuristic_evaluation(state: &bitboard::GameState) -> f64 {
 }
 
 fn minimax(state: &bitboard::GameState, depth: &u8, min: &f64, max: &f64) -> f64 {
-  match state.leaf_value {
-    bitboard::LeafValue::Win => f64::INFINITY,
-    bitboard::LeafValue::Loss => f64::NEG_INFINITY,
-    bitboard::LeafValue::Draw => 0.0,
-    _ => 0.0, // TODO we need to skip this one
-  }; // TODO this doesn't return?
+  if state.leaf_value == bitboard::LeafValue::Win {
+    return f64::INFINITY;
+  }
+  if state.leaf_value == bitboard::LeafValue::Loss {
+    return f64::NEG_INFINITY;
+  }
+  if state.leaf_value == bitboard::LeafValue::Draw {
+    return 0.0;
+  }
 
   if depth < &1 {
     return heuristic_evaluation(state);
@@ -19,10 +22,7 @@ fn minimax(state: &bitboard::GameState, depth: &u8, min: &f64, max: &f64) -> f64
   0.0 // TODO
 }
 
-pub fn pick_best_move(bitboard1: u64, bitboard2: u64) -> usize {
-  // TODO parse u64 bitboard to a state
-  let state = bitboard::create_new_board();
-
+pub fn pick_best_move(state: bitboard::GameState) -> usize {
   let legal_moves = bitboard::get_legal_moves(state.height);
 
   let mut best_value = f64::NEG_INFINITY;
