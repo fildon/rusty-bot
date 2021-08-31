@@ -1,4 +1,4 @@
-#[derive(PartialEq, Eq)]
+#[derive(PartialEq, Eq, Debug)]
 pub enum LeafValue {
   Win,
   Loss,
@@ -6,6 +6,7 @@ pub enum LeafValue {
   InProgress,
 }
 
+#[derive(Debug)]
 pub struct GameState {
   /**
    * ```md

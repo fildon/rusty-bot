@@ -1,12 +1,6 @@
 # README
 
-## To Build for web
-
-```shell
-wasm-pack build --target web
-```
-
-## To Build for npm
+## To Build
 
 ```shell
 wasm-pack build --target bundler

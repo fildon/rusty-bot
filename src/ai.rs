@@ -1,4 +1,5 @@
 use crate::bitboard;
+use web_sys::console;
 
 /**
  * A map of the board with each cell displaying how many wins could pass through it
@@ -73,15 +74,35 @@ fn minimax(state: bitboard::GameState, depth: u8, min: f64, max: f64) -> f64 {
   return v;
 }
 
-pub fn pick_best_move(state: bitboard::GameState) -> usize {
+pub fn pick_best_move(state: bitboard::GameState, depth: u8, debug: bool) -> usize {
+  if debug {
+    console::log_1(&"pick_best_move start".into());
+    console::log_1(&format!("{:?}", state).into());
+    console::log_1(&format!("depth: {}", depth).into());
+  }
+
   let legal_moves = bitboard::get_legal_moves(state.height);
 
+  if debug {
+    console::log_1(
+      &format!(
+        "legal_moves: {}",
+        &legal_moves
+          .iter()
+          .map(|&v| v.to_string())
+          .collect::<Vec<String>>()
+          .join(", ")
+      )
+      .into(),
+    );
+  }
+
   let mut best_value = f64::NEG_INFINITY;
-  let mut best_move: usize = 0;
+  let mut best_move: usize = legal_moves[0];
   for current_move in legal_moves.iter() {
     let mut current_value = minimax(
       bitboard::play_move(&state, *current_move),
-      9,
+      depth,
       f64::NEG_INFINITY,
       f64::INFINITY,
     );
@@ -95,6 +116,10 @@ pub fn pick_best_move(state: bitboard::GameState) -> usize {
     }
   }
 
+  if debug {
+    console::log_1(&format!("best_move: {}", best_move).into());
+  }
+
   return best_move;
 }
 
@@ -106,7 +131,7 @@ mod tests {
 
   fn opens_in_middle_column() {
     let blank_board = create_game_state(0, 0);
-    let opening_move = pick_best_move(blank_board);
+    let opening_move = pick_best_move(blank_board, 9, false);
     assert_eq!(opening_move, 3)
   }
 
@@ -118,5 +143,12 @@ mod tests {
     assert_eq!(heuristic_evaluation(1, 1), 0);
     assert_eq!(heuristic_evaluation(3, 0), 7);
     assert_eq!(heuristic_evaluation(1 << 21, 0), 7);
+  }
+
+  //#[test] // Test no longer needed. Used as part of a bug investigation.
+  fn _illegal_move_regression() {
+    let error_board = create_game_state(5682038189, 13205502089746);
+    let error_move = pick_best_move(error_board, 10, false);
+    assert_eq!(error_move, 5)
   }
 }
