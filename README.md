@@ -3,7 +3,7 @@
 ## To Build
 
 ```shell
-wasm-pack build --target bundler
+./build.sh
 ```
 
 ## To Test
