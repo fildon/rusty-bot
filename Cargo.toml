@@ -1,6 +1,6 @@
 [package]
 name = "rusty-bot"
-version = "0.1.2"
+version = "1.0.0"
 edition = "2018"
 description = "Bot to play connect4"
 

@@ -173,11 +173,4 @@ mod tests {
     assert_eq!(heuristic_evaluation(3, 0), 7);
     assert_eq!(heuristic_evaluation(1 << 21, 0), 7);
   }
-
-  //#[test] // Test no longer needed. Used as part of a bug investigation.
-  fn _illegal_move_regression() {
-    let error_board = create_game_state(5682038189, 13205502089746);
-    let error_move = pick_best_move(&error_board, 10, false);
-    assert_eq!(error_move, 5)
-  }
 }
