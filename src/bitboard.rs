@@ -27,7 +27,7 @@ pub struct GameState {
   pub leaf_value: LeafValue,
 }
 
-fn count_ones(binary: u64) -> u8 {
+pub fn count_ones(binary: &u64) -> u8 {
   let mut count = 0;
   let mut clone = binary.clone();
   while clone > 0 {
@@ -75,7 +75,7 @@ pub fn create_game_state(bitboard1: u64, bitboard2: u64) -> GameState {
   GameState {
     bitboard: [bitboard1, bitboard2],
     height,
-    to_play: count_ones(bitboard1 | bitboard2) % 2 == 0,
+    to_play: count_ones(&(bitboard1 | bitboard2)) % 2 == 0,
     leaf_value: get_leaf_value(bitboard1, bitboard2, height),
   }
 }

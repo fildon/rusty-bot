@@ -1,5 +1,30 @@
 use crate::bitboard;
+use crate::lookup;
 use web_sys::console;
+
+fn create_lookup_key(p1: u64, p2: u64) -> String {
+  let mut key = String::from("");
+  for i in 0..=47 {
+    if i == 6 || i == 13 || i == 20 || i == 27 || i == 34 || i == 41 {
+      continue;
+    }
+    if (p1 >> i) & 1 != 0 {
+      key.push('x')
+    } else if (p2 >> i) & 1 != 0 {
+      key.push('o')
+    } else {
+      key.push('b')
+    }
+  }
+
+  return key;
+}
+
+fn lookup(p1: u64, p2: u64) -> Option<f64> {
+  let lookup_key = create_lookup_key(p1, p2);
+
+  return lookup::EIGHTPLY.get(&lookup_key).cloned();
+}
 
 /**
  * A map of the board with each cell displaying how many wins could pass through it
@@ -25,7 +50,7 @@ fn heuristic_evaluation(p1: u64, p2: u64) -> i32 {
   return evaluation;
 }
 
-fn minimax(state: bitboard::GameState, depth: u8, min: f64, max: f64) -> f64 {
+fn minimax(state: bitboard::GameState, depth: u8, min: f64, max: f64, debug: bool) -> f64 {
   if state.leaf_value == bitboard::LeafValue::Win {
     return f64::INFINITY;
   }
@@ -34,6 +59,15 @@ fn minimax(state: bitboard::GameState, depth: u8, min: f64, max: f64) -> f64 {
   }
   if state.leaf_value == bitboard::LeafValue::Draw {
     return 0.0;
+  }
+
+  // Use the lookup for player 1's 5th turn (8plys)
+  if state.to_play && bitboard::count_ones(&state.bitboard[0]) == 4 {
+    let lookup_result = lookup(state.bitboard[0], state.bitboard[1]);
+
+    if let Some(result) = lookup_result {
+      return result;
+    }
   }
 
   if depth < 1 {
@@ -68,6 +102,7 @@ fn minimax(state: bitboard::GameState, depth: u8, min: f64, max: f64) -> f64 {
       depth - 1,
       if state.to_play { v } else { min },
       if state.to_play { max } else { v },
+      debug,
     );
 
     if state.to_play {
@@ -134,6 +169,7 @@ pub fn pick_best_move(state: &bitboard::GameState, depth: u8, debug: bool) -> us
       depth,
       f64::NEG_INFINITY,
       f64::INFINITY,
+      debug,
     );
     // invert for player 2
     if !state.to_play {
